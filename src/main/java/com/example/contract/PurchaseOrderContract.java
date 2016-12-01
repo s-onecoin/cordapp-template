@@ -1,8 +1,7 @@
 package com.example.contract;
 
 import kotlin.Unit;
-import net.corda.core.Utils;
-import net.corda.core.ContractsDSL;
+import net.corda.core.UtilsKt;
 import net.corda.core.contracts.*;
 import net.corda.core.contracts.TransactionForContract.InOutGroup;
 import net.corda.core.contracts.clauses.*;
@@ -19,6 +18,8 @@ import java.util.stream.Collectors;
 import static kotlin.collections.CollectionsKt.single;
 import static net.corda.core.contracts.ContractsDSL.requireSingleCommand;
 import static net.corda.core.contracts.ContractsDSL.requireThat;
+
+
 
 /**
  * A implementation of a basic smart contract in Corda.
@@ -44,13 +45,21 @@ class PurchaseOrderContract implements Contract {
     /** This is a reference to the underlying legal contract template and associated parameters. */
     private SecureHash legalContractReference = SecureHash.sha256("purchase order contract template and params");
 
+    private List<AuthenticatedObject<Commands>> extractCommands(TransactionForContract tx) {
+        return tx.getCommands()
+                .stream()
+                .filter((AuthenticatedObject<CommandData> command) -> command.getValue() instanceof Commands)
+                .map((AuthenticatedObject<CommandData> command) -> new AuthenticatedObject<>(command.getSigners(), command.getSigningParties(), (Commands) command.getValue()))
+                .collect(Collectors.toList());
+    }
+
     /**
      * The AllComposition() clause mandates that all specified clauses clauses (in this case [Timestamped] and [Group])
      * must be executed and valid for a transaction involving this type of contract to be valid.
      */
     @Override
     public void verify(TransactionForContract tx) {
-        ClauseVerifier.verifyClause(tx, new AllComposition(new Clauses.Timestamp(), new Clauses.Group()), tx.getCommands().ContractsDSL.select<Commands>());
+        ClauseVerifier.verifyClause(tx, new AllComposition(new Clauses.Timestamp(), new Clauses.Group()), extractCommands(tx));
     }
 
     /**
@@ -122,23 +131,33 @@ class PurchaseOrderContract implements Contract {
 
                 requireThat(require -> {
                     // Generic constraints around generation of the issue purchase order transaction.
-                    require.by("No inputs should be consumed when issuing a purchase order.", inputs.isEmpty());
-                    require.by("Only one output state should be created for each group.", outputs.size() == 1);
-                    require.by("The buyer and the seller cannot be the same entity.", out.getBuyer() != out.getSeller());
-                    require.by("The 'participants' and 'parties' must be the same.", out.getParties().stream().map(party -> party.getOwningKey()).collect(Collectors.toList()).containsAll(out.getParticipants()));
-                    require.by("The buyer and the seller are the parties.", out.getParties().containsAll(new ArrayList<Party>() {{ add(out.getBuyer()); add(out.getSeller());}} ));
+                    require.by("No inputs should be consumed when issuing a purchase order.",
+                            inputs.isEmpty());
+                    require.by("Only one output state should be created for each group.",
+                            outputs.size() == 1);
+                    require.by("The buyer and the seller cannot be the same entity.",
+                            out.getBuyer() != out.getSeller());
+                    require.by("The 'participants' and 'parties' must be the same.",
+                            out.getParties().stream().map(party -> party.getOwningKey()).collect(Collectors.toList()).containsAll(out.getParticipants()));
+                    require.by("The buyer and the seller are the parties.",
+                            out.getParties().containsAll(new ArrayList<Party>() {{ add(out.getBuyer()); add(out.getSeller());}} ));
 
                     // Purchase order specific constraints.
-                    require.by("We only deliver to the UK.", out.getPo().getDeliveryAddress().getCountry() == "UK");
-                    require.by("You must order at least one type of item.", !out.getPo().getItems().isEmpty());
-                    require.by("You cannot order zero or negative amounts of an item.", out.getPo().getItems().stream().allMatch(item -> item.getAmount() > 0));
-                    require.by("You can only order up to 100 items in total.", out.getPo().getItems().stream().mapToInt(item -> item.getAmount()).sum() <= 100);
-                    require.by("The delivery date must be in the future.", out.getPo().getDeliveryDate().toInstant().isAfter(time));
+                    require.by("We only deliver to the UK.",
+                            out.getPo().getDeliveryAddress().getCountry() == "UK");
+                    require.by("You must order at least one type of item.",
+                            !out.getPo().getItems().isEmpty());
+                    require.by("You cannot order zero or negative amounts of an item.",
+                            out.getPo().getItems().stream().allMatch(item -> item.getAmount() > 0));
+                    require.by("You can only order up to 100 items in total.",
+                            out.getPo().getItems().stream().mapToInt(item -> item.getAmount()).sum() <= 100);
+                    require.by("The delivery date must be in the future.",
+                            out.getPo().getDeliveryDate().toInstant().isAfter(time));
 
                     return Unit.INSTANCE;
                 });
 
-                Collections.singleton(command.getValue());
+                return Collections.singleton(command.getValue());
             }
         }
     }
