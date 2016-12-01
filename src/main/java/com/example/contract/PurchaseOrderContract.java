@@ -1,0 +1,145 @@
+package com.example.contract;
+
+import kotlin.Unit;
+import net.corda.core.Utils;
+import net.corda.core.ContractsDSL;
+import net.corda.core.contracts.*;
+import net.corda.core.contracts.TransactionForContract.InOutGroup;
+import net.corda.core.contracts.clauses.*;
+import net.corda.core.crypto.Party;
+import net.corda.core.crypto.SecureHash;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static kotlin.collections.CollectionsKt.single;
+import static net.corda.core.contracts.ContractsDSL.requireSingleCommand;
+import static net.corda.core.contracts.ContractsDSL.requireThat;
+
+/**
+ * A implementation of a basic smart contract in Corda.
+ *
+ * This contract facilitates the business logic required for two parties to come to an agreement over a newly issued
+ * [PurchaseOrderState], which in turn, encapsulates a [PurchaseOrder].
+ *
+ * For a new [PurchaseOrderState] to be issued onto the ledger a transaction is required which takes:
+ * - Zero input states.
+ * - One output state: the new [PurchaseOrderState].
+ * - An Issue() command with the public keys of the buyer and seller parties.
+ * - A timestamp.
+ *
+ * The contract code (implemented within the [Timestamped] and [Issue] clauses) is run when the transaction is
+ * verified via the verify() function.
+ * - [Timestamped] checks for the existence of a timestamp
+ * - [Issue] runs a series of constraints, see more below
+ *
+ * All contracts must sub-class the [Contract] interface.
+ */
+class PurchaseOrderContract implements Contract {
+
+    /** This is a reference to the underlying legal contract template and associated parameters. */
+    private SecureHash legalContractReference = SecureHash.sha256("purchase order contract template and params");
+
+    /**
+     * The AllComposition() clause mandates that all specified clauses clauses (in this case [Timestamped] and [Group])
+     * must be executed and valid for a transaction involving this type of contract to be valid.
+     */
+    @Override
+    public void verify(TransactionForContract tx) {
+        ClauseVerifier.verifyClause(tx, new AllComposition(new Clauses.Timestamp(), new Clauses.Group()), tx.getCommands().ContractsDSL.select<Commands>());
+    }
+
+    /**
+     * Currently this contract only implements one command.
+     * If you wish to add further commands to perhaps Amend() or Cancel() a purchase order, you would add them here. You
+     * would then need to add associated clauses to handle transaction verification for the new commands.
+     */
+    public interface Commands extends CommandData {
+        class Place implements IssueCommand, Commands {
+            private long nonce = UtilsKt.random63BitValue();
+
+            @Override
+            public long getNonce() { return nonce; }
+        }
+    }
+
+    @Override
+    public SecureHash getLegalContractReference() {
+        return legalContractReference;
+    }
+
+    /** This is where we implement our clauses. */
+    interface Clauses {
+        /** Checks for the existence of a timestamp. */
+        class Timestamp extends Clause<ContractState, Commands, Unit> {
+            @Override
+            public Set<Commands> verify(TransactionForContract tx,
+                    List<? extends ContractState> inputs,
+                    List<? extends ContractState> outputs,
+                    List<? extends AuthenticatedObject<? extends Commands>> commands,
+                    Unit groupingKey) {
+
+                requireThat(require -> {
+                    require.by("must be timestamped", tx.getTimestamp() != null);
+                    return Unit.INSTANCE;
+                });
+
+                // We return an empty set because we don't process any commands
+                return Collections.emptySet();
+            }
+        }
+
+        // If you add additional clauses, make sure to reference them within the 'AnyComposition()' clause.
+        class Group extends GroupClauseVerifier<PurchaseOrderState, Commands, UniqueIdentifier> {
+
+            Group() {
+                super(new AnyComposition<>(new Clauses.Place()
+                ));
+            }
+
+            @Override
+            public List<InOutGroup<PurchaseOrderState, UniqueIdentifier>> groupStates(TransactionForContract tx) {
+                // Group by purchase order linearId for in / out states
+                // TODO: Need to double-check this call.
+                return tx.groupStates(PurchaseOrderState.class, PurchaseOrderState::getLinearId);
+            }
+        }
+
+        class Place extends Clause<PurchaseOrderState, Commands, UniqueIdentifier> {
+            @Override
+            public Set<Commands> verify(TransactionForContract tx,
+                                        List<? extends PurchaseOrderState> inputs,
+                                        List<? extends PurchaseOrderState> outputs,
+                                        List<? extends AuthenticatedObject<? extends Commands>> commands,
+                                        UniqueIdentifier groupingKey) {
+                AuthenticatedObject<Commands.Place> command = requireSingleCommand(tx.getCommands(), Commands.Place.class);
+                PurchaseOrderState out = single(outputs);
+                Instant time = tx.getTimestamp().getMidpoint();
+
+                requireThat(require -> {
+                    // Generic constraints around generation of the issue purchase order transaction.
+                    require.by("No inputs should be consumed when issuing a purchase order.", inputs.isEmpty());
+                    require.by("Only one output state should be created for each group.", outputs.size() == 1);
+                    require.by("The buyer and the seller cannot be the same entity.", out.getBuyer() != out.getSeller());
+                    require.by("The 'participants' and 'parties' must be the same.", out.getParties().stream().map(party -> party.getOwningKey()).collect(Collectors.toList()).containsAll(out.getParticipants()));
+                    require.by("The buyer and the seller are the parties.", out.getParties().containsAll(new ArrayList<Party>() {{ add(out.getBuyer()); add(out.getSeller());}} ));
+
+                    // Purchase order specific constraints.
+                    require.by("We only deliver to the UK.", out.getPo().getDeliveryAddress().getCountry() == "UK");
+                    require.by("You must order at least one type of item.", !out.getPo().getItems().isEmpty());
+                    require.by("You cannot order zero or negative amounts of an item.", out.getPo().getItems().stream().allMatch(item -> item.getAmount() > 0));
+                    require.by("You can only order up to 100 items in total.", out.getPo().getItems().stream().mapToInt(item -> item.getAmount()).sum() <= 100);
+                    require.by("The delivery date must be in the future.", out.getPo().getDeliveryDate().toInstant().isAfter(time));
+
+                    return Unit.INSTANCE;
+                });
+
+                Collections.singleton(command.getValue());
+            }
+        }
+    }
+}
