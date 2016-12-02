@@ -29,25 +29,26 @@ public class PurchaseOrderState implements DealState {
     private Party seller;
     private PurchaseOrderContract contract;
     private UniqueIdentifier linearId;
-    /** Another ref field, for matching with data in external systems. In this case the external Id is the po number. */
-    private String ref;
-    /** List of parties involved in this particular deal. */
-    private ArrayList<Party> parties;
-    /** The public keys of party that is able to consume this state in a valid transaction. */
-    private List<CompositeKey> participants;
+    private String ref; /** Another ref field, for matching with data in external systems. In this case the external Id is the po number. */
+    private List<Party> parties; /** List of parties involved in this particular deal. */
+    private List<CompositeKey> participants; /** The public keys of party that is able to consume this state in a valid transaction. */
 
     public PurchaseOrderState(PurchaseOrder po,
                               Party buyer,
                               Party seller,
                               PurchaseOrderContract contract) {
+
+        UniqueIdentifier id = new UniqueIdentifier(Integer.toString(po.getOrderNumber()), UUID.randomUUID());
+        ArrayList<Party> ps = new ArrayList();
+        ps.add(buyer);
+        ps.add(seller);
+
         this.po = po;
         this.buyer = buyer;
         this.seller = seller;
         this.contract = contract;
-        UniqueIdentifier id = new UniqueIdentifier(Integer.toString(po.getOrderNumber()), UUID.randomUUID());
         this.linearId = id;
         this.ref = id.getExternalId();
-        ArrayList<Party> ps = new ArrayList<Party>() {{ add(buyer); add(seller); }};
         this.parties = ps;
         this.participants = ps.stream().map(party -> party.getOwningKey()).collect(Collectors.toList());
     }
@@ -55,18 +56,12 @@ public class PurchaseOrderState implements DealState {
     public PurchaseOrder getPo() { return po; }
     public Party getBuyer() { return buyer; }
     public Party getSeller() { return seller; }
-    @Override
-    public PurchaseOrderContract getContract() { return contract; }
-    @Override
-    public UniqueIdentifier getLinearId() { return linearId; }
-    @Override
-    public String getRef() { return ref; }
-    @Override
-    public ArrayList<Party> getParties() { return parties; }
-    @Override
-    public List<CompositeKey> getParticipants() { return participants; }
-    @Override
-    public Integer getEncumbrance() { return null; }
+    @Override public PurchaseOrderContract getContract() { return contract; }
+    @Override public UniqueIdentifier getLinearId() { return linearId; }
+    @Override public String getRef() { return ref; }
+    @Override public List<Party> getParties() { return parties; }
+    @Override public List<CompositeKey> getParticipants() { return participants; }
+    @Override public Integer getEncumbrance() { return null; }
 
     /**
      * This returns true if the state should be tracked by the vault of a particular node. In this case the logic is
@@ -75,7 +70,6 @@ public class PurchaseOrderState implements DealState {
     @Override
     public boolean isRelevant(Set<? extends PublicKey> ourKeys) {
         List<PublicKey> partyKeys = parties.stream().flatMap(party -> party.getOwningKey().getKeys().stream()).collect(Collectors.toList());
-
         return !ourKeys.stream().filter(partyKeys::contains).collect(Collectors.toList()).isEmpty();
     }
 

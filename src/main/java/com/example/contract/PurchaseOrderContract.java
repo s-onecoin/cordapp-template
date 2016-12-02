@@ -71,13 +71,11 @@ public class PurchaseOrderContract implements Contract {
         class Place implements IssueCommand, Commands {
             private long nonce = UtilsKt.random63BitValue();
 
-            @Override
-            public long getNonce() { return nonce; }
+            @Override public long getNonce() { return nonce; }
         }
     }
 
-    @Override
-    public SecureHash getLegalContractReference() {
+    @Override public SecureHash getLegalContractReference() {
         return legalContractReference;
     }
 
@@ -85,12 +83,11 @@ public class PurchaseOrderContract implements Contract {
     interface Clauses {
         /** Checks for the existence of a timestamp. */
         class Timestamp extends Clause<ContractState, Commands, Unit> {
-            @Override
-            public Set<Commands> verify(TransactionForContract tx,
-                    List<? extends ContractState> inputs,
-                    List<? extends ContractState> outputs,
-                    List<? extends AuthenticatedObject<? extends Commands>> commands,
-                    Unit groupingKey) {
+            @Override public Set<Commands> verify(TransactionForContract tx,
+                List<? extends ContractState> inputs,
+                List<? extends ContractState> outputs,
+                List<? extends AuthenticatedObject<? extends Commands>> commands,
+                Unit groupingKey) {
 
                 requireThat(require -> {
                     require.by("must be timestamped", tx.getTimestamp() != null);
@@ -106,25 +103,23 @@ public class PurchaseOrderContract implements Contract {
         class Group extends GroupClauseVerifier<PurchaseOrderState, Commands, UniqueIdentifier> {
 
             Group() {
-                super(new AnyComposition<>(new Clauses.Place()
-                ));
+                super(new AnyComposition<>(new Clauses.Place()));
             }
 
-            @Override
-            public List<InOutGroup<PurchaseOrderState, UniqueIdentifier>> groupStates(TransactionForContract tx) {
-                // Group by purchase order linearId for in / out states
+            @Override public List<InOutGroup<PurchaseOrderState, UniqueIdentifier>> groupStates(TransactionForContract tx) {
+                // Group by purchase order linearId for in/out states
                 // TODO: Need to double-check this call.
                 return tx.groupStates(PurchaseOrderState.class, PurchaseOrderState::getLinearId);
             }
         }
 
         class Place extends Clause<PurchaseOrderState, Commands, UniqueIdentifier> {
-            @Override
-            public Set<Commands> verify(TransactionForContract tx,
-                                        List<? extends PurchaseOrderState> inputs,
-                                        List<? extends PurchaseOrderState> outputs,
-                                        List<? extends AuthenticatedObject<? extends Commands>> commands,
-                                        UniqueIdentifier groupingKey) {
+            @Override public Set<Commands> verify(TransactionForContract tx,
+                List<? extends PurchaseOrderState> inputs,
+                List<? extends PurchaseOrderState> outputs,
+                List<? extends AuthenticatedObject<? extends Commands>> commands,
+                UniqueIdentifier groupingKey) {
+
                 AuthenticatedObject<Commands.Place> command = requireSingleCommand(tx.getCommands(), Commands.Place.class);
                 PurchaseOrderState out = single(outputs);
                 Instant time = tx.getTimestamp().getMidpoint();
