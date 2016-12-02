@@ -1,20 +1,25 @@
 package com.example.model;
 
 /**
- * The name, amount and price of an item to be purchased. It is assumed that the buyer has the seller's item catalogue
- * and will only place orders for valid items. Of course, a reference to a particular version of the catalogue could be
- * included with the Issue() purchase order transaction as an attachment, such that the seller can check the items are valid.
- * For more details on attachments see
+ * These files contain the data structures which the parties using this CorDapp will reach an agreement over. States can
+ * support arbitrary complex object graphs. For a more complicated one, see
  *
- * samples/attachment-demo/src/kotlin/net/corda/attachmentdemo
+ * samples/irs-demo/src/kotlin/net/corda/irs/contract/IRS.kt
  *
  * in the main Corda repo (http://github.com/corda/corda).
  *
- * In the contract verify code, we have written some constraints about items.
+ * These structures could be embedded within the ContractState. However, for clarity, we have moved them in to a
+ * separate file.
+ */
+
+/**
+ * A simple class representing a purchase order items.
  */
 public class Item {
     private String name;
     private int amount;
+
+    public Item() {}
 
     public Item(String name, int amount) {
         this.name = name;

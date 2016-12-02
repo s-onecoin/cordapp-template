@@ -1,5 +1,6 @@
 package com.example.contract;
 
+import com.example.model.Item;
 import kotlin.Unit;
 import net.corda.core.UtilsKt;
 import net.corda.core.contracts.*;
@@ -41,9 +42,9 @@ import static net.corda.core.contracts.ContractsDSL.requireThat;
  * All contracts must sub-class the [Contract] interface.
  */
 public class PurchaseOrderContract implements Contract {
-
     /** This is a reference to the underlying legal contract template and associated parameters. */
     private SecureHash legalContractReference = SecureHash.sha256("purchase order contract template and params");
+    @Override public SecureHash getLegalContractReference() { return legalContractReference; }
 
     private List<AuthenticatedObject<Commands>> extractCommands(TransactionForContract tx) {
         return tx.getCommands()
@@ -53,30 +54,22 @@ public class PurchaseOrderContract implements Contract {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * The AllComposition() clause mandates that all specified clauses clauses (in this case [Timestamped] and [Group])
-     * must be executed and valid for a transaction involving this type of contract to be valid.
-     */
+    /** The AllComposition() clause mandates that all specified clauses clauses (in this case [Timestamped] and [Group])
+     * must be executed and valid for a transaction involving this type of contract to be valid. */
     @Override
     public void verify(TransactionForContract tx) {
         ClauseVerifier.verifyClause(tx, new AllComposition(new Clauses.Timestamp(), new Clauses.Group()), extractCommands(tx));
     }
 
-    /**
-     * Currently this contract only implements one command.
-     * If you wish to add further commands to perhaps Amend() or Cancel() a purchase order, you would add them here. You
-     * would then need to add associated clauses to handle transaction verification for the new commands.
-     */
+    /** Currently this contract only implements one command. If you wish to add further commands to perhaps Amend() or
+     * Cancel() a purchase order, you would add them here. You would then need to add associated clauses to handle
+     * transaction verification for the new commands. */
     public interface Commands extends CommandData {
         class Place implements IssueCommand, Commands {
             private long nonce = UtilsKt.random63BitValue();
 
             @Override public long getNonce() { return nonce; }
         }
-    }
-
-    @Override public SecureHash getLegalContractReference() {
-        return legalContractReference;
     }
 
     /** This is where we implement our clauses. */
@@ -102,17 +95,15 @@ public class PurchaseOrderContract implements Contract {
         // If you add additional clauses, make sure to reference them within the 'AnyComposition()' clause.
         class Group extends GroupClauseVerifier<PurchaseOrderState, Commands, UniqueIdentifier> {
 
-            Group() {
-                super(new AnyComposition<>(new Clauses.Place()));
-            }
+            Group() { super(new AnyComposition<>(new Clauses.Place())); }
 
             @Override public List<InOutGroup<PurchaseOrderState, UniqueIdentifier>> groupStates(TransactionForContract tx) {
-                // Group by purchase order linearId for in/out states
-                // TODO: Need to double-check this call.
+                // Group by purchase order linearId for in/out states.
                 return tx.groupStates(PurchaseOrderState.class, PurchaseOrderState::getLinearId);
             }
         }
 
+        /** Checks various requirements for the placement of a purchase order. */
         class Place extends Clause<PurchaseOrderState, Commands, UniqueIdentifier> {
             @Override public Set<Commands> verify(TransactionForContract tx,
                 List<? extends PurchaseOrderState> inputs,
@@ -133,19 +124,19 @@ public class PurchaseOrderContract implements Contract {
                     require.by("The buyer and the seller cannot be the same entity.",
                             out.getBuyer() != out.getSeller());
                     require.by("The 'participants' and 'parties' must be the same.",
-                            out.getParties().stream().map(party -> party.getOwningKey()).collect(Collectors.toList()).containsAll(out.getParticipants()));
+                            out.getParties().stream().map(Party::getOwningKey).collect(Collectors.toList()).containsAll(out.getParticipants()));
                     require.by("The buyer and the seller are the parties.",
                             out.getParties().containsAll(new ArrayList<Party>() {{ add(out.getBuyer()); add(out.getSeller());}} ));
 
                     // Purchase order specific constraints.
                     require.by("We only deliver to the UK.",
-                            out.getPo().getDeliveryAddress().getCountry() == "UK");
+                            out.getPo().getDeliveryAddress().getCountry().equals("UK"));
                     require.by("You must order at least one type of item.",
                             !out.getPo().getItems().isEmpty());
                     require.by("You cannot order zero or negative amounts of an item.",
                             out.getPo().getItems().stream().allMatch(item -> item.getAmount() > 0));
                     require.by("You can only order up to 100 items in total.",
-                            out.getPo().getItems().stream().mapToInt(item -> item.getAmount()).sum() <= 100);
+                            out.getPo().getItems().stream().mapToInt(Item::getAmount).sum() <= 100);
                     require.by("The delivery date must be in the future.",
                             out.getPo().getDeliveryDate().toInstant().isAfter(time));
 

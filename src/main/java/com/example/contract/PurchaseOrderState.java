@@ -29,7 +29,7 @@ public class PurchaseOrderState implements DealState {
     private Party seller;
     private PurchaseOrderContract contract;
     private UniqueIdentifier linearId;
-    private String ref; /** Another ref field, for matching with data in external systems. In this case the external Id is the po number. */
+    private String ref; /** Another ref field, for matching with data in external systems. In this case, the external id is the po number. */
     private List<Party> parties; /** List of parties involved in this particular deal. */
     private List<CompositeKey> participants; /** The public keys of party that is able to consume this state in a valid transaction. */
 
@@ -63,10 +63,8 @@ public class PurchaseOrderState implements DealState {
     @Override public List<CompositeKey> getParticipants() { return participants; }
     @Override public Integer getEncumbrance() { return null; }
 
-    /**
-     * This returns true if the state should be tracked by the vault of a particular node. In this case the logic is
-     * simple; track this state if we are one of the involved parties.
-     */
+    /** This returns true if the state should be tracked by the vault of a particular node. In this case the logic is
+     * simple; track this state if we are one of the involved parties. */
     @Override
     public boolean isRelevant(Set<? extends PublicKey> ourKeys) {
         List<PublicKey> partyKeys = parties.stream().flatMap(party -> party.getOwningKey().getKeys().stream()).collect(Collectors.toList());
@@ -76,9 +74,7 @@ public class PurchaseOrderState implements DealState {
     /**
      * Helper function to generate a new Issue() purchase order transaction. For more details on building transactions
      * see the API for [TransactionBuilder] in the JavaDocs.
-     * <p>
-     * https://docs.corda.net/api/net.corda.core.transactions/-transaction-builder/index.html
-     */
+     * https://docs.corda.net/api/net.corda.core.transactions/-transaction-builder/index.html */
     @Override
     public TransactionBuilder generateAgreement(Party notary) {
         return new TransactionType.General.Builder(notary)
