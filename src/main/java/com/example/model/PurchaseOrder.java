@@ -1,7 +1,7 @@
 package com.example.model;
 
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * This file contains the data structures which the parties using this CorDapp will reach an agreement over. States can
@@ -22,9 +22,9 @@ public class PurchaseOrder {
     private int orderNumber;
     private Date deliveryDate;
     private Address deliveryAddress;
-    private ArrayList<Item> items;
+    private List<Item> items;
 
-    public PurchaseOrder(int orderNumber, Date deliveryDate, Address deliveryAddress, ArrayList<Item> items) {
+    public PurchaseOrder(int orderNumber, Date deliveryDate, Address deliveryAddress, List<Item> items) {
         this.orderNumber = orderNumber;
         this.deliveryDate = deliveryDate;
         this.deliveryAddress = deliveryAddress;
@@ -34,5 +34,5 @@ public class PurchaseOrder {
     public int getOrderNumber() { return orderNumber; }
     public Date getDeliveryDate() { return deliveryDate; }
     public Address getDeliveryAddress() { return deliveryAddress; }
-    public ArrayList<Item> getItems() { return items; }
+    public List<Item> getItems() { return items; }
 }

@@ -3,10 +3,14 @@ package com.example.api
 import com.example.contract.PurchaseOrderContract
 import com.example.contract.PurchaseOrderState
 import com.example.model.PurchaseOrder
+import com.example.model.Address
+import com.example.model.Item
 import com.example.flow.ExampleFlow
 import com.example.flow.ExampleFlowResult
+import net.corda.core.contracts.TransactionState
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.linearHeadsOfType
+import java.util.Date
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -55,26 +59,17 @@ class ExampleApi(val services: ServiceHub) {
      */
     @PUT
     @Path("{party}/create-purchase-order")
-    fun createPurchaseOrder(po: PurchaseOrder, @PathParam("party") partyName: String): Response {
+    // TODO: Test version of the endpoint to test the java model/contract/state in a realistic setting
+    fun createPurchaseOrder(po: String, @PathParam("party") partyName: String) {
+        // TODO: Generate the PurchaseOrder from the .json, instead of using this dummy
+        val address = Address("London", "UK")
+        val item = Item("thing", 4)
+        val date = Date()
+        val po = PurchaseOrder(1, date, address, mutableListOf(item))
+
         val otherParty = services.identityService.partyFromName(partyName)
-        if(otherParty != null) {
-            val state = PurchaseOrderState(po, services.myInfo.legalIdentity, otherParty, PurchaseOrderContract())
-            // The line below blocks and waits for the future to resolve.
-            val result: ExampleFlowResult = services.invokeFlowAsync(ExampleFlow.Initiator::class.java, state, otherParty).resultFuture.get()
-            when (result) {
-                is ExampleFlowResult.Success ->
-                    return Response
-                            .status(Response.Status.CREATED)
-                            .entity(result.message)
-                            .build()
-                is ExampleFlowResult.Failure ->
-                    return Response
-                            .status(Response.Status.BAD_REQUEST)
-                            .entity(result.message)
-                            .build()
-            }
-        } else {
-            return Response.status(Response.Status.BAD_REQUEST).build()
-        }
+        val notary = services.networkMapCache.notaryNodes.single().notaryIdentity
+        val state = PurchaseOrderState(po, services.myInfo.legalIdentity, otherParty, PurchaseOrderContract())
+        val offerMessage = TransactionState(state, notary)
     }
 }

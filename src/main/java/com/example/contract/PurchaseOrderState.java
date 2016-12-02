@@ -23,22 +23,18 @@ import java.util.stream.Collectors;
  * interfaces for different requirements. In this case we are implementing a [DealState] which defines a few helper
  * properties and methods for managing states pertaining to deals.
  */
-class PurchaseOrderState implements DealState {
+public class PurchaseOrderState implements DealState {
     private PurchaseOrder po;
     private Party buyer;
     private Party seller;
     private PurchaseOrderContract contract;
-    private UniqueIdentifier linearId = new UniqueIdentifier(Integer.toString(po.getOrderNumber()), UUID.randomUUID());
+    private UniqueIdentifier linearId;
     /** Another ref field, for matching with data in external systems. In this case the external Id is the po number. */
-    private String ref = linearId.getExternalId();
-    /**
-     * List of parties involved in this particular deal
-     */
-    private ArrayList<Party> parties = new ArrayList<Party>() {{ add(buyer); add(seller); }};
-    /**
-     * The public keys of party that is able to consume this state in a valid transaction.
-     */
-    private List<CompositeKey> participants = parties.stream().map(party -> party.getOwningKey()).collect(Collectors.toList());
+    private String ref;
+    /** List of parties involved in this particular deal. */
+    private ArrayList<Party> parties;
+    /** The public keys of party that is able to consume this state in a valid transaction. */
+    private List<CompositeKey> participants;
 
     public PurchaseOrderState(PurchaseOrder po,
                               Party buyer,
@@ -48,6 +44,12 @@ class PurchaseOrderState implements DealState {
         this.buyer = buyer;
         this.seller = seller;
         this.contract = contract;
+        UniqueIdentifier id = new UniqueIdentifier(Integer.toString(po.getOrderNumber()), UUID.randomUUID());
+        this.linearId = id;
+        this.ref = id.getExternalId();
+        ArrayList<Party> ps = new ArrayList<Party>() {{ add(buyer); add(seller); }};
+        this.parties = ps;
+        this.participants = ps.stream().map(party -> party.getOwningKey()).collect(Collectors.toList());
     }
 
     public PurchaseOrder getPo() { return po; }

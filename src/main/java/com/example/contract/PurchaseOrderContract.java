@@ -40,7 +40,7 @@ import static net.corda.core.contracts.ContractsDSL.requireThat;
  *
  * All contracts must sub-class the [Contract] interface.
  */
-class PurchaseOrderContract implements Contract {
+public class PurchaseOrderContract implements Contract {
 
     /** This is a reference to the underlying legal contract template and associated parameters. */
     private SecureHash legalContractReference = SecureHash.sha256("purchase order contract template and params");
