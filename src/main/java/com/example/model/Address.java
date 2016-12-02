@@ -19,6 +19,7 @@ public class Address {
     private String city;
     private String country;
 
+    // Empty constructor required by JS ExampleAPI endpoint.
     public Address() {}
 
     public Address(String city, String country) {

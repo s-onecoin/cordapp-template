@@ -19,6 +19,7 @@ public class Item {
     private String name;
     private int amount;
 
+    // Empty constructor required by JS ExampleAPI endpoint.
     public Item() {}
 
     public Item(String name, int amount) {

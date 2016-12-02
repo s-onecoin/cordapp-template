@@ -24,6 +24,7 @@ public class PurchaseOrder {
     private Address deliveryAddress;
     private List<Item> items;
 
+    // Empty constructor required by JS ExampleAPI endpoint.
     public PurchaseOrder() {}
 
     public PurchaseOrder(int orderNumber, Date deliveryDate, Address deliveryAddress, List<Item> items) {
