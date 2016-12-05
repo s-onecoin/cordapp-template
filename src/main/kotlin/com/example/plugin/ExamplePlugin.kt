@@ -36,7 +36,7 @@ class ExamplePlugin : CordaPluginRegistry() {
      * factories that would be used when an initiating party attempts to communicate with our node using a particular
      * flow. See the [ExampleService.Service] class for an implementation which sets up a
      */
-    override val servicePlugins: List<Class<*>> = listOf(ExampleService.Service::class.java)
+    override val servicePlugins: List<Class<*>> = listOf(ExampleService::class.java)
     /** A list of directories in the resources directory that will be served by Jetty under /web */
     override val staticServeDirs: Map<String, String> = mapOf(
             // This will serve the exampleWeb directory in resources to /web/example
