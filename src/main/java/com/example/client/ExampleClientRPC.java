@@ -3,6 +3,7 @@ package com.example.client;
 import com.example.model.PurchaseOrder;
 import com.google.common.net.HostAndPort;
 import kotlin.Pair;
+import kotlin.PreconditionsKt;
 import kotlin.Unit;
 import net.corda.client.CordaRPCClient;
 import net.corda.core.contracts.TransactionState;
@@ -25,7 +26,7 @@ import static net.corda.core.contracts.ContractsDSL.requireThat;
  *  Demonstration of using the CordaRPCClient to connect to a Corda Node and
  *  steam some State data from the node.
  **/
-// TODO: IS THIS WORKING YET IN THE NORMAL REPO? CAN'T TEST UNTIL IT IS
+// TODO: NOT YET TESTED
 public class ExampleClientRPC {
     static Logger logger = LoggerFactory.getLogger(ExampleClientRPC.class);
 

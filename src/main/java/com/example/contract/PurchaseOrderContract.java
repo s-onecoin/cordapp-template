@@ -1,6 +1,6 @@
 package com.example.contract;
 
-import com.example.model.Item;
+import com.example.model.PurchaseOrder;
 import kotlin.Unit;
 import net.corda.core.UtilsKt;
 import net.corda.core.contracts.*;
@@ -19,8 +19,6 @@ import java.util.stream.Collectors;
 import static kotlin.collections.CollectionsKt.single;
 import static net.corda.core.contracts.ContractsDSL.requireSingleCommand;
 import static net.corda.core.contracts.ContractsDSL.requireThat;
-
-
 
 /**
  * A implementation of a basic smart contract in Corda.
@@ -136,7 +134,7 @@ public class PurchaseOrderContract implements Contract {
                     require.by("You cannot order zero or negative amounts of an item.",
                             out.getPo().getItems().stream().allMatch(item -> item.getAmount() > 0));
                     require.by("You can only order up to 100 items in total.",
-                            out.getPo().getItems().stream().mapToInt(Item::getAmount).sum() <= 100);
+                            out.getPo().getItems().stream().mapToInt(PurchaseOrder.Item::getAmount).sum() <= 100);
                     require.by("The delivery date must be in the future.",
                             out.getPo().getDeliveryDate().toInstant().isAfter(time));
 

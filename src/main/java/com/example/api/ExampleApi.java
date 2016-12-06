@@ -2,8 +2,7 @@ package com.example.api;
 
 import com.example.contract.PurchaseOrderContract;
 import com.example.contract.PurchaseOrderState;
-import com.example.flow.ExampleFlowResult;
-import com.example.flow.Initiator;
+import com.example.flow.ExampleFlow;
 import com.example.model.PurchaseOrder;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
@@ -13,6 +12,7 @@ import net.corda.core.node.ServiceHub;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +35,7 @@ public class ExampleApi {
     @Path("me")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, String> whoami() {
-        Map<String, String> meMap = new HashMap<>();
-        meMap.put("me", me);
+        Map<String, String> meMap = Collections.singletonMap("me", me);
         return meMap;
     }
 
@@ -82,8 +81,8 @@ public class ExampleApi {
         if (otherParty != null) {
             PurchaseOrderState state = new PurchaseOrderState(po, services.getMyInfo().getLegalIdentity(), otherParty, new PurchaseOrderContract());
             // The line below blocks and waits for the future to resolve.
-            ExampleFlowResult result = services.invokeFlowAsync(Initiator.class, state, otherParty, Initiator.tracker()).getResultFuture().get();
-            if (result instanceof ExampleFlowResult.Success) {
+            ExampleFlow.ExampleFlowResult result = services.invokeFlowAsync(ExampleFlow.Initiator.class, state, otherParty, ExampleFlow.Initiator.tracker()).getResultFuture().get();
+            if (result instanceof ExampleFlow.ExampleFlowResult.Success) {
                 return Response
                         .status(Response.Status.CREATED)
                         .entity(result.toString())

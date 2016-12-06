@@ -4,8 +4,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.example.api.ExampleApi;
 import com.example.contract.PurchaseOrderContract;
 import com.example.contract.PurchaseOrderState;
-import com.example.flow.Acceptor;
-import com.example.flow.Initiator;
+import com.example.flow.ExampleFlow;
 import com.example.model.PurchaseOrder;
 import com.example.service.ExampleService;
 import net.corda.core.crypto.Party;
@@ -54,9 +53,9 @@ public class ExamplePlugin extends CordaPluginRegistry {
         Set<String> classNames = new HashSet<>();
         classNames.add(PurchaseOrderState.class.getName());
         classNames.add(Party.class.getName());
-        classNames.add(Acceptor.tracker().getClass().getName());
+        classNames.add(ExampleFlow.Acceptor.tracker().getClass().getName());
 
-        requiredFlows = Collections.singletonMap(Initiator.class.getName(), classNames);
+        requiredFlows = Collections.singletonMap(ExampleFlow.Initiator.class.getName(), classNames);
     }
 
     @Override public List<Class<?>> getWebApis() {

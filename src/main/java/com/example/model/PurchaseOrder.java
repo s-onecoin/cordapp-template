@@ -38,4 +38,42 @@ public class PurchaseOrder {
     public Date getDeliveryDate() { return deliveryDate; }
     public Address getDeliveryAddress() { return deliveryAddress; }
     public List<Item> getItems() { return items; }
+
+    /**
+     * A simple class representing a purchase order address.
+     */
+    public static class Address {
+        private String city;
+        private String country;
+
+        // Empty constructor required by JS ExampleAPI endpoint.
+        public Address() {}
+
+        public Address(String city, String country) {
+            this.city = city;
+            this.country = country;
+        }
+
+        public String getCity() { return city; }
+        public String getCountry() { return country; }
+    }
+
+    /**
+     * A simple class representing a purchase order items.
+     */
+    public static class Item {
+        private String name;
+        private int amount;
+
+        // Empty constructor required by JS ExampleAPI endpoint.
+        public Item() {}
+
+        public Item(String name, int amount) {
+            this.name = name;
+            this.amount = amount;
+        }
+
+        public String getName() { return name; }
+        public int getAmount() { return amount; }
+    }
 }

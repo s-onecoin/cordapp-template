@@ -1,7 +1,6 @@
 package com.example.service;
 
-import com.example.flow.Acceptor;
-import com.example.flow.Initiator;
+import com.example.flow.ExampleFlow;
 import net.corda.core.node.PluginServiceHub;
 
 /**
@@ -18,8 +17,8 @@ import net.corda.core.node.PluginServiceHub;
 public class ExampleService {
     public ExampleService(PluginServiceHub services) {
         services.registerFlowInitiator(
-                kotlin.jvm.JvmClassMappingKt.getKotlinClass(Initiator.class),
-                party -> new Acceptor(party, Acceptor.tracker())
+                kotlin.jvm.JvmClassMappingKt.getKotlinClass(ExampleFlow.Initiator.class),
+                party -> new ExampleFlow.Acceptor(party, ExampleFlow.Acceptor.tracker())
         );
     }
 }
