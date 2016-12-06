@@ -2,8 +2,8 @@ package com.example.api;
 
 import com.example.contract.PurchaseOrderContract;
 import com.example.contract.PurchaseOrderState;
-import com.example.flow.ExampleFlow;
 import com.example.flow.ExampleFlowResult;
+import com.example.flow.Initiator;
 import com.example.model.PurchaseOrder;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
@@ -82,16 +82,16 @@ public class ExampleApi {
         if (otherParty != null) {
             PurchaseOrderState state = new PurchaseOrderState(po, services.getMyInfo().getLegalIdentity(), otherParty, new PurchaseOrderContract());
             // The line below blocks and waits for the future to resolve.
-            ExampleFlowResult result = services.invokeFlowAsync(ExampleFlow.Initiator.class, state, otherParty).getResultFuture().get();
+            ExampleFlowResult result = services.invokeFlowAsync(Initiator.class, state, otherParty, Initiator.tracker()).getResultFuture().get();
             if (result instanceof ExampleFlowResult.Success) {
                 return Response
                         .status(Response.Status.CREATED)
-                        .entity(((ExampleFlowResult.Success) result).getMessage())
+                        .entity(result.toString())
                         .build();
             } else {
                 return Response
                         .status(Response.Status.BAD_REQUEST)
-                    .entity(((ExampleFlowResult.Failure) result).getMessage())
+                    .entity(result.toString())
                     .build();
             }
         } else {
