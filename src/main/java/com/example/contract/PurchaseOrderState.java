@@ -30,8 +30,6 @@ public class PurchaseOrderState implements DealState {
     private PurchaseOrderContract contract;
     private UniqueIdentifier linearId;
     private String ref; /** Another ref field, for matching with data in external systems. In this case, the external id is the po number. */
-    private List<Party> parties; /** List of parties involved in this particular deal. */
-    private List<CompositeKey> participants; /** The public keys of party that is able to consume this state in a valid transaction. */
 
     public PurchaseOrderState(PurchaseOrder po,
                               Party buyer,
@@ -39,9 +37,6 @@ public class PurchaseOrderState implements DealState {
                               PurchaseOrderContract contract) {
 
         UniqueIdentifier id = new UniqueIdentifier(Integer.toString(po.getOrderNumber()), UUID.randomUUID());
-        ArrayList<Party> ps = new ArrayList();
-        ps.add(buyer);
-        ps.add(seller);
 
         this.po = po;
         this.buyer = buyer;
@@ -49,8 +44,6 @@ public class PurchaseOrderState implements DealState {
         this.contract = contract;
         this.linearId = id;
         this.ref = id.getExternalId();
-        this.parties = ps;
-        this.participants = ps.stream().map(party -> party.getOwningKey()).collect(Collectors.toList());
     }
 
     public PurchaseOrder getPo() { return po; }
@@ -59,15 +52,19 @@ public class PurchaseOrderState implements DealState {
     @Override public PurchaseOrderContract getContract() { return contract; }
     @Override public UniqueIdentifier getLinearId() { return linearId; }
     @Override public String getRef() { return ref; }
-    @Override public List<Party> getParties() { return parties; }
-    @Override public List<CompositeKey> getParticipants() { return participants; }
     @Override public Integer getEncumbrance() { return null; }
+    @Override public List<Party> getParties() {
+        ArrayList<Party> ps = new ArrayList<>();
+        ps.add(buyer);
+        ps.add(seller);
+        return ps;
+    }
+    @Override public List<CompositeKey> getParticipants() { return this.getParties().stream().map(party -> party.getOwningKey()).collect(Collectors.toList()); }
 
     /** This returns true if the state should be tracked by the vault of a particular node. In this case the logic is
      * simple; track this state if we are one of the involved parties. */
-    @Override
-    public boolean isRelevant(Set<? extends PublicKey> ourKeys) {
-        List<PublicKey> partyKeys = parties.stream().flatMap(party -> party.getOwningKey().getKeys().stream()).collect(Collectors.toList());
+    @Override public boolean isRelevant(Set<? extends PublicKey> ourKeys) {
+        List<PublicKey> partyKeys = getParties().stream().flatMap(party -> party.getOwningKey().getKeys().stream()).collect(Collectors.toList());
         return !ourKeys.stream().filter(partyKeys::contains).collect(Collectors.toList()).isEmpty();
     }
 
@@ -75,9 +72,8 @@ public class PurchaseOrderState implements DealState {
      * Helper function to generate a new Issue() purchase order transaction. For more details on building transactions
      * see the API for [TransactionBuilder] in the JavaDocs.
      * https://docs.corda.net/api/net.corda.core.transactions/-transaction-builder/index.html */
-    @Override
-    public TransactionBuilder generateAgreement(Party notary) {
+    @Override public TransactionBuilder generateAgreement(Party notary) {
         return new TransactionType.General.Builder(notary)
-                .withItems(this, new Command(new PurchaseOrderContract.Commands.Place(), participants));
+                .withItems(this, new Command(new PurchaseOrderContract.Commands.Place(), getParticipants()));
     }
 }

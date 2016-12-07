@@ -39,6 +39,14 @@ public class PurchaseOrder {
     public Address getDeliveryAddress() { return deliveryAddress; }
     public List<Item> getItems() { return items; }
 
+    @Override public String toString() {
+        return String.format("PurchaseOrder(orderNumber=%d, deliveryDate=%s, deliveryAddress=%s, items=%s)",
+                orderNumber,
+                deliveryDate.toString(),
+                deliveryAddress.toString(),
+                java.util.Arrays.toString(items.toArray()));
+    }
+
     /**
      * A simple class representing a purchase order address.
      */
@@ -56,6 +64,10 @@ public class PurchaseOrder {
 
         public String getCity() { return city; }
         public String getCountry() { return country; }
+
+        @Override public String toString() {
+            return String.format("Address(city=%s, country=%s)", city, country);
+        }
     }
 
     /**
@@ -75,5 +87,9 @@ public class PurchaseOrder {
 
         public String getName() { return name; }
         public int getAmount() { return amount; }
+
+        @Override public String toString() {
+            return String.format("Item(name=%s, amount=%d)", name, amount);
+        }
     }
 }

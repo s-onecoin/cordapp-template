@@ -6,11 +6,9 @@ import net.corda.core.UtilsKt;
 import net.corda.core.contracts.*;
 import net.corda.core.contracts.TransactionForContract.InOutGroup;
 import net.corda.core.contracts.clauses.*;
-import net.corda.core.crypto.Party;
 import net.corda.core.crypto.SecureHash;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -121,10 +119,8 @@ public class PurchaseOrderContract implements Contract {
                             outputs.size() == 1);
                     require.by("The buyer and the seller cannot be the same entity.",
                             out.getBuyer() != out.getSeller());
-                    require.by("The 'participants' and 'parties' must be the same.",
-                            out.getParties().stream().map(Party::getOwningKey).collect(Collectors.toList()).containsAll(out.getParticipants()));
-                    require.by("The buyer and the seller are the parties.",
-                            out.getParties().containsAll(new ArrayList<Party>() {{ add(out.getBuyer()); add(out.getSeller());}} ));
+                    require.by("All of the participants must be signers.",
+                            command.getSigners().containsAll(out.getParticipants()));
 
                     // Purchase order specific constraints.
                     require.by("We only deliver to the UK.",

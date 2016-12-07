@@ -1,11 +1,11 @@
 package com.example.client;
 
-import com.example.model.PurchaseOrder;
+import com.example.contract.PurchaseOrderState;
 import com.google.common.net.HostAndPort;
 import kotlin.Pair;
-import kotlin.PreconditionsKt;
 import kotlin.Unit;
 import net.corda.client.CordaRPCClient;
+import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.TransactionState;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.node.services.config.ConfigUtilitiesKt;
@@ -14,7 +14,6 @@ import org.apache.activemq.artemis.api.core.ActiveMQNotConnectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
-import com.example.contract.PurchaseOrderState;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -26,7 +25,6 @@ import static net.corda.core.contracts.ContractsDSL.requireThat;
  *  Demonstration of using the CordaRPCClient to connect to a Corda Node and
  *  steam some State data from the node.
  **/
-// TODO: NOT YET TESTED
 public class ExampleClientRPC {
     static Logger logger = LoggerFactory.getLogger(ExampleClientRPC.class);
 
@@ -52,11 +50,10 @@ public class ExampleClientRPC {
         futureTxs.startWith(txs).subscribe(
                 (SignedTransaction transaction) ->
                         transaction.getTx().getOutputs().forEach(
-                                (TransactionState output) -> {
-                                    PurchaseOrderState poState = (PurchaseOrderState) output.getData();
-                                    logger.info(poState.getPo().toString());
-                                })
-
+                            (TransactionState<ContractState> output) -> {
+                                PurchaseOrderState poState = (PurchaseOrderState) output.getData();
+                                logger.info(poState.getPo().toString());
+                            })
         );
 
         new CompletableFuture<Unit>().get();
