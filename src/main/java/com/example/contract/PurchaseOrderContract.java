@@ -54,7 +54,7 @@ public class PurchaseOrderContract implements Contract {
      * must be executed and valid for a transaction involving this type of contract to be valid. */
     @Override
     public void verify(TransactionForContract tx) {
-        ClauseVerifier.verifyClause(tx, new AllComposition(new Clauses.Timestamp(), new Clauses.Group()), extractCommands(tx));
+        ClauseVerifier.verifyClause(tx, new AllComposition<>(new Clauses.Timestamp(), new Clauses.Group()), extractCommands(tx));
     }
 
     /** Currently this contract only implements one command. If you wish to add further commands to perhaps Amend() or
@@ -78,10 +78,9 @@ public class PurchaseOrderContract implements Contract {
                 List<? extends AuthenticatedObject<? extends Commands>> commands,
                 Unit groupingKey) {
 
-                requireThat(require -> {
-                    require.by("must be timestamped", tx.getTimestamp() != null);
-                    return Unit.INSTANCE;
-                });
+                if (tx.getTimestamp() == null) {
+                    throw new IllegalArgumentException("must be timestamped");
+                }
 
                 // We return an empty set because we don't process any commands
                 return Collections.emptySet();

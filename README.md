@@ -104,7 +104,7 @@ NodeA can generate purchase orders for lists and quantities of items and
 associated metadata such as delivery address and delivery date. The
 flows used to facilitate the agreement process always result in an
 agreement with the seller as long as the purchase order meets the
-contract constraints which are defined in `PurchaseOrderContract.kt`.
+contract constraints which are defined in `PurchaseOrderContract.java`.
 
 All agreed purchase orders between NodeA and NodeB become "shared facts"
 between NodeA and NodeB. Note that NodeC won't see any of these
@@ -173,7 +173,7 @@ page and enter the purchase order details, e.g.
 and click "Create purchase order". The modal dialogue should close.
 
 To check what validation is performed on the purchase order data, have a look 
-at the `Place` class in `PurchaseOrderContract.kt`. For example, Entering a
+at the `Place` class in `PurchaseOrderContract.java`. For example, Entering a
 'Country Code' other than 'UK' will cause the verify function to return an
 Exception and you should rceeive an error message in response.
 
@@ -264,7 +264,7 @@ available tables and provides an interface for you to query them using SQL.
 
 ## Using the Example RPC client
 
-The `ExampleClientRPC.kt` file is a simple utility which uses the client
+The `ExampleClientRPC.java` file is a simple utility which uses the client
 RPC library to connect to a node and log the 'placed' purchase orders.
 It will log any existing purchase orders and listen for any future
 purchase orders. To build the client use the following gradle task:

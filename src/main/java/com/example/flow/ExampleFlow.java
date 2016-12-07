@@ -19,6 +19,8 @@ import java.security.KeyPair;
 import java.time.Instant;
 import java.util.Collections;
 
+import static kotlin.collections.CollectionsKt.single;
+
 /**
  * This is the "Hello World" of flows!
  *
@@ -94,8 +96,7 @@ public class ExampleFlow {
                 // can be generated for each transaction.
                 KeyPair myKeyPair = getServiceHub().getLegalIdentityKey();
                 // Obtain a reference to the notary we want to use and its public key.
-                // TODO: get(0) is lazy replacement for select()
-                Party notary = getServiceHub().getNetworkMapCache().getNotaryNodes().get(0).getNotaryIdentity();
+                Party notary = single(getServiceHub().getNetworkMapCache().getNotaryNodes()).getNotaryIdentity();
                 CompositeKey notaryPubKey = notary.getOwningKey();
                 // Stage 1.
                 progressTracker.setCurrentStep(CONSTRUCTING_OFFER);

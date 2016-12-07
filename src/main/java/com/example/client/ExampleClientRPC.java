@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static net.corda.core.contracts.ContractsDSL.requireThat;
-
 /**
  *  Demonstration of using the CordaRPCClient to connect to a Corda Node and
  *  steam some State data from the node.
@@ -29,10 +27,10 @@ public class ExampleClientRPC {
     static Logger logger = LoggerFactory.getLogger(ExampleClientRPC.class);
 
     public static void main(String[] args) throws ActiveMQNotConnectedException, InterruptedException, ExecutionException {
-        requireThat(require -> {
-            require.by("Usage: ExampleClientRPC <node address>", args.length == 1);
-            return Unit.INSTANCE;
-        });
+        if (args.length != 1) {
+            throw new IllegalArgumentException("Usage: ExampleClientRPC <node address>");
+        }
+
         HostAndPort nodeAddress = HostAndPort.fromString(args[0]);
         CordaRPCClient client = new CordaRPCClient(nodeAddress, ConfigUtilitiesKt.configureTestSSL());
 
