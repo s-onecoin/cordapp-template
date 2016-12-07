@@ -185,14 +185,14 @@ object ExampleFlow {
                 progressTracker.currentStep = SEND_TRANSACTION_AND_WAIT_FOR_RESPONSE
                 // Stage 12.
                 // Receive the notarised transaction off the wire.
-                val ntx = sendAndReceive<SignedTransaction>(otherParty, stx).unwrap {
+                val ntx = sendAndReceive<SignedTransaction>(otherParty, stx).unwrap { stx ->
                     progressTracker.currentStep = VERIFYING_TRANSACTION
                     // Validate transaction.
                     // No need to allow for any omited signatures as everyone should have signed.
-                    it.verifySignatures()
+                    stx.verifySignatures()
                     // Check it's valid.
-                    it.toLedgerTransaction(serviceHub).verify()
-                    it
+                    stx.toLedgerTransaction(serviceHub).verify()
+                    stx
                 }
                 // Record the transaction.
                 progressTracker.currentStep = RECORDING
